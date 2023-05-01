@@ -2,7 +2,7 @@ mod color_util;
 
 use color_util::write_color;
 use raytracer::ray::Ray;
-use vec3::{unit_vector, Color, Point3, Vec3};
+use vec3::{dot, unit_vector, Color, Point3, Vec3};
 
 fn main() {
     // Image
@@ -41,7 +41,22 @@ fn main() {
     eprintln!("Done.");
 }
 
+fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
+    let oc = r.origin() - *center;
+    let a = dot(&r.direction(), &r.direction());
+    let b = 2.0 * dot(&oc, &r.direction());
+    let c = dot(&oc, &oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant > 0.0
+}
+
 fn ray_color(r: &Ray) -> Color {
+    let center: Point3 = (0.0, 0.0, -1.0).into();
+    if hit_sphere(&center, 0.5, r) {
+        // red
+        return (1.0, 0.0, 0.0).into();
+    }
+
     // normalized unit vector, so that -1.0 < y < 1.0
     let unit_direction = unit_vector(&r.direction());
     // scale t to 0.0 < t < 1.0
