@@ -13,6 +13,7 @@ dependencies = [
 name = "rtw"
 version = "0.1.0"
 dependencies = [
+ "raytracer",
  "vec3",
 ]
 
