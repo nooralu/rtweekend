@@ -5,3 +5,10 @@ version = 3
 [[package]]
 name = "rtw"
 version = "0.1.0"
+dependencies = [
+ "vec3",
+]
+
+[[package]]
+name = "vec3"
+version = "0.1.0"
