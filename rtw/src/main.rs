@@ -41,20 +41,29 @@ fn main() {
     eprintln!("Done.");
 }
 
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
+fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
     let oc = r.origin() - *center;
     let a = dot(&r.direction(), &r.direction());
     let b = 2.0 * dot(&oc, &r.direction());
     let c = dot(&oc, &oc) - radius * radius;
     let discriminant = b * b - 4.0 * a * c;
-    discriminant > 0.0
+    if discriminant < 0.0 {
+        -1.0
+    } else {
+        (-b - discriminant.sqrt()) / (2.0 * a)
+    }
 }
 
 fn ray_color(r: &Ray) -> Color {
     let center: Point3 = (0.0, 0.0, -1.0).into();
-    if hit_sphere(&center, 0.5, r) {
-        // red
-        return (1.0, 0.0, 0.0).into();
+    let t = hit_sphere(&center, 0.5, r);
+    if t > 0.0 {
+        // normal vector
+        let n = unit_vector(&(r.at(t) - center));
+        // map normal vector to color
+        // n + (1.0, 1.0, 1.0) is to map the range -1.0 < n < 1.0 to 0.0 < n < 2.0
+        // 0.5 * (n + (1.0, 1.0, 1.0)) is to map the range 0.0 < n < 2.0 to 0.0 < n < 1.0
+        return 0.5 * (n + (1.0, 1.0, 1.0).into());
     }
 
     // normalized unit vector, so that -1.0 < y < 1.0
