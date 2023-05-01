@@ -20,6 +20,7 @@ dependencies = [
 name = "tests"
 version = "0.1.0"
 dependencies = [
+ "raytracer",
  "vec3",
 ]
 
