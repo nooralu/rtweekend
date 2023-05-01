@@ -2,4 +2,5 @@
 members = [
     "rtw",
     "vec3",
+    "tests",
 ]
