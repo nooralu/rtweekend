@@ -8,7 +8,7 @@ use raytracer::{
     ray::Ray,
 };
 use std::f64::{consts::PI, INFINITY};
-use vec3::{random_in_unit_sphere, unit_vector, Color};
+use vec3::{random_unit_vector, unit_vector, Color};
 
 fn main() {
     // Image
@@ -60,7 +60,9 @@ fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Color {
     }
 
     if world.hit(r, 0.001, INFINITY, &mut rec) {
-        let target = rec.p + rec.normal + random_in_unit_sphere();
+        // change distribution from cos^3(theta) to cos(theta)
+        // let target = rec.p + rec.normal + vec3::random_in_unit_sphere();
+        let target = rec.p + rec.normal + random_unit_vector();
         return 0.5 * ray_color(&(rec.p, target - rec.p).into(), world, depth - 1);
     }
 
