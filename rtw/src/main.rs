@@ -9,7 +9,7 @@ use raytracer::{
     ray::Ray,
 };
 use std::{f64::INFINITY, sync::Arc};
-use vec3::{unit_vector, Color};
+use vec3::{unit_vector, Color, Point3};
 
 fn main() {
     // Image
@@ -60,12 +60,20 @@ fn main() {
     )));
 
     // Camera
+    let look_from: Point3 = (3.0, 3.0, 2.0).into();
+    let look_at: Point3 = (0.0, 0.0, -1.0).into();
+    let vup: Point3 = (0.0, 1.0, 0.0).into();
+    let dist_to_focus: f64 = (look_from - look_at).length();
+    let aperture: f64 = 2.0;
+
     let camera: Camera = Camera::new_with(
-        (-2.0, 2.0, 1.0).into(),
-        (0.0, 0.0, -1.0).into(),
-        (0.0, 1.0, 0.0).into(),
+        look_from,
+        look_at,
+        vup,
         20.0,
         aspect_ratio,
+        aperture,
+        dist_to_focus,
     );
 
     // Render

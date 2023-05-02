@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use std::ops::{Add, Div, Mul, Sub};
 
 use crate::Vec3;
@@ -100,4 +101,18 @@ pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
     let r_out_perp = etai_over_etat * (*uv + cos_theta * *n);
     let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * *n;
     r_out_perp + r_out_parallel
+}
+
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let p: Vec3 = (
+            rand::thread_rng().gen_range(-1.0..1.0),
+            rand::thread_rng().gen_range(-1.0..1.0),
+            0.0,
+        )
+            .into();
+        if p.length_squared() < 1.0 {
+            return p;
+        }
+    }
 }
