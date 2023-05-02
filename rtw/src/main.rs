@@ -1,18 +1,21 @@
 mod color_util;
 
 use color_util::write_color;
+use rand::prelude::*;
 use raytracer::{
+    camera::Camera,
     hittable::{hittable_list::HittableList, sphere::Sphere, HitRecord, Hittable},
     ray::Ray,
 };
 use std::f64::{consts::PI, INFINITY};
-use vec3::{unit_vector, Color, Point3, Vec3};
+use vec3::{unit_vector, Color};
 
 fn main() {
     // Image
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as u32;
+    let samples_per_pixel = 100;
 
     // World
     let mut world: HittableList = Default::default();
@@ -20,15 +23,7 @@ fn main() {
     world.add(Box::<Sphere>::new(((0.0, -100.5, -1.0), 100.0).into()));
 
     // Camera
-    let viewport_height = 2.0;
-    let viewport_width = aspect_ratio * viewport_height;
-    let focal_length = 1.0;
-
-    let origin: Point3 = (0.0, 0.0, 0.0).into();
-    let herizontal: Vec3 = (viewport_width, 0.0, 0.0).into();
-    let vertical: Vec3 = (0.0, viewport_height, 0.0).into();
-    let lower_left_corner: Point3 =
-        origin - herizontal / 2.0 - vertical / 2.0 - (0.0, 0.0, focal_length).into();
+    let camera: Camera = Default::default();
 
     // Render
 
@@ -37,14 +32,14 @@ fn main() {
     for j in (0..image_height).rev() {
         eprintln!("\rScanlines remaining: {j}");
         for i in 0..image_width {
-            let u = i as f64 / (image_width - 1) as f64;
-            let v = j as f64 / (image_height - 1) as f64;
-            let r = (
-                origin,
-                lower_left_corner + u * herizontal + v * vertical - origin,
-            );
-            let pixel_color = ray_color(&r.into(), &world);
-            write_color(&pixel_color);
+            let mut pixel_color: Color = Default::default();
+            for _ in 0..samples_per_pixel {
+                let u = (i as f64 + random::<f64>()) / (image_width - 1) as f64;
+                let v = (j as f64 + random::<f64>()) / (image_height - 1) as f64;
+                let r = camera.get_ray(u, v);
+                pixel_color += ray_color(&r, &world);
+            }
+            write_color(&pixel_color, samples_per_pixel);
         }
     }
     eprintln!("Done.");
