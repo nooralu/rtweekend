@@ -8,7 +8,7 @@ use raytracer::{
     ray::Ray,
 };
 use std::f64::{consts::PI, INFINITY};
-use vec3::{unit_vector, Color};
+use vec3::{random_in_unit_sphere, unit_vector, Color};
 
 fn main() {
     // Image
@@ -16,6 +16,7 @@ fn main() {
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as u32;
     let samples_per_pixel = 100;
+    let max_depth = 50;
 
     // World
     let mut world: HittableList = Default::default();
@@ -37,7 +38,7 @@ fn main() {
                 let u = (i as f64 + random::<f64>()) / (image_width - 1) as f64;
                 let v = (j as f64 + random::<f64>()) / (image_height - 1) as f64;
                 let r = camera.get_ray(u, v);
-                pixel_color += ray_color(&r, &world);
+                pixel_color += ray_color(&r, &world, max_depth);
             }
             write_color(&pixel_color, samples_per_pixel);
         }
@@ -49,10 +50,18 @@ fn degrees_to_radians(degrees: f64) -> f64 {
     degrees * PI / 180.0
 }
 
-fn ray_color(r: &Ray, world: &impl Hittable) -> Color {
+fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Color {
     let mut rec: HitRecord = Default::default();
-    if world.hit(r, 0.0, INFINITY, &mut rec) {
-        return 0.5 * (rec.normal + (1.0, 1.0, 1.0).into());
+
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if depth <= 0 {
+        // black
+        return (0.0, 0.0, 0.0).into();
+    }
+
+    if world.hit(r, 0.001, INFINITY, &mut rec) {
+        let target = rec.p + rec.normal + random_in_unit_sphere();
+        return 0.5 * ray_color(&(rec.p, target - rec.p).into(), world, depth - 1);
     }
 
     // normalized unit vector, so that -1.0 < y < 1.0

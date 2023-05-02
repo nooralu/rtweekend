@@ -26,6 +26,21 @@ mod tests {
 
         assert_eq!(vec.length_squared(), 14.0);
         assert_eq!(vec.length(), 14.0_f64.sqrt());
+
+        let vec = Vec3::random();
+        assert!(vec.x() >= 0.0 && vec.x() <= 1.0);
+        assert!(vec.y() >= 0.0 && vec.y() <= 1.0);
+        assert!(vec.z() >= 0.0 && vec.z() <= 1.0);
+
+        let vec = Vec3::random_range(0.0, 2.0);
+        assert!(vec.x() >= 0.0 && vec.x() <= 2.0);
+        assert!(vec.y() >= 0.0 && vec.y() <= 2.0);
+        assert!(vec.z() >= 0.0 && vec.z() <= 2.0);
+
+        let vec = Vec3::random_range(-1.0, 1.0);
+        assert!(vec.x() >= -1.0 && vec.x() <= 1.0);
+        assert!(vec.y() >= -1.0 && vec.y() <= 1.0);
+        assert!(vec.z() >= -1.0 && vec.z() <= 1.0);
     }
 
     #[test]
@@ -125,5 +140,11 @@ mod util_tests {
     fn test_unit_vector() {
         let vec: Vec3 = (2.0, 0.0, 0.0).into();
         assert_eq!(unit_vector(&vec), (1.0, 0.0, 0.0).into());
+    }
+
+    #[test]
+    fn test_random_in_unit_sphere() {
+        let vec = random_in_unit_sphere();
+        assert!(vec.length() <= 1.0);
     }
 }

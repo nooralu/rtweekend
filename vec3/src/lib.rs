@@ -11,6 +11,8 @@ pub mod utils;
 pub use ops::*;
 pub use utils::*;
 
+use rand::prelude::*;
+
 impl Vec3 {
     pub fn new() -> Self {
         Self(0.0, 0.0, 0.0)
@@ -38,6 +40,22 @@ impl Vec3 {
 
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
+    }
+
+    pub fn random() -> Self {
+        Self(
+            rand::random::<f64>(),
+            rand::random::<f64>(),
+            rand::random::<f64>(),
+        )
+    }
+
+    pub fn random_range(min: f64, max: f64) -> Self {
+        Self(
+            rand::thread_rng().gen_range(min..max),
+            rand::thread_rng().gen_range(min..max),
+            rand::thread_rng().gen_range(min..max),
+        )
     }
 }
 
