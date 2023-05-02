@@ -5,4 +5,4 @@ if [ -f image.png ]; then
     rm image.png
 fi
 
-cargo run | ffmpeg -i pipe:0 image.png -loglevel quiet
+cargo run --release | ffmpeg -i pipe:0 image.png -loglevel quiet
