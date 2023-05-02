@@ -5,13 +5,10 @@ use rand::prelude::*;
 use raytracer::{
     camera::Camera,
     hittable::{hittable_list::HittableList, sphere::Sphere, Hittable},
-    material::{lambertian::Lambertian, Material},
+    material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, Material},
     ray::Ray,
 };
-use std::{
-    f64::{consts::PI, INFINITY},
-    sync::Arc,
-};
+use std::{f64::INFINITY, sync::Arc};
 use vec3::{unit_vector, Color};
 
 fn main() {
@@ -23,27 +20,53 @@ fn main() {
     let max_depth = 50;
 
     // World
-    let r = (PI / 4.0).cos();
     let mut world: HittableList = Default::default();
-    let material_left: Arc<Box<dyn Material>> =
-        Arc::new(Box::new(Lambertian::new_with((0.0, 0.0, 1.0).into())));
+    let material_ground: Arc<Box<dyn Material>> =
+        Arc::new(Box::new(Lambertian::new_with((0.8, 0.8, 0.0).into())));
+    let material_center: Arc<Box<dyn Material>> =
+        Arc::new(Box::new(Lambertian::new_with((0.1, 0.2, 0.5).into())));
+    let material_left: Arc<Box<dyn Material>> = Arc::new(Box::new(Dielectric::new_with(1.5)));
     let material_right: Arc<Box<dyn Material>> =
-        Arc::new(Box::new(Lambertian::new_with((1.0, 0.0, 0.0).into())));
+        Arc::new(Box::new(Metal::new_with((0.8, 0.6, 0.2).into(), 0.0)));
 
     world.add(Box::new(Sphere::new_with(
-        (-r, 0.0, -1.0).into(),
-        r,
-        material_left,
+        (0.0, -100.5, -1.0).into(),
+        100.0,
+        material_ground,
     )));
 
     world.add(Box::new(Sphere::new_with(
-        (r, 0.0, -1.0).into(),
-        r,
+        (0.0, 0.0, -1.0).into(),
+        0.5,
+        material_center,
+    )));
+
+    world.add(Box::new(Sphere::new_with(
+        (-1.0, 0.0, -1.0).into(),
+        0.5,
+        material_left.clone(),
+    )));
+
+    world.add(Box::new(Sphere::new_with(
+        (-1.0, 0.0, -1.0).into(),
+        -0.4,
+        material_left.clone(),
+    )));
+
+    world.add(Box::new(Sphere::new_with(
+        (1.0, 0.0, -1.0).into(),
+        0.5,
         material_right,
     )));
 
     // Camera
-    let camera: Camera = Camera::new_with(90.0, aspect_ratio);
+    let camera: Camera = Camera::new_with(
+        (-2.0, 2.0, 1.0).into(),
+        (0.0, 0.0, -1.0).into(),
+        (0.0, 1.0, 0.0).into(),
+        20.0,
+        aspect_ratio,
+    );
 
     // Render
 
