@@ -5,7 +5,7 @@ use rand::prelude::*;
 use raytracer::{
     camera::Camera,
     hittable::{hittable_list::HittableList, sphere::Sphere, Hittable},
-    material::{lambertian::Lambertian, metal::Metal, Material},
+    material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, Material},
     ray::Ray,
 };
 use std::{
@@ -26,10 +26,8 @@ fn main() {
     let mut world: HittableList = Default::default();
     let material_ground: Arc<Box<dyn Material>> =
         Arc::new(Box::new(Lambertian::new_with((0.8, 0.8, 0.0).into())));
-    let material_center: Arc<Box<dyn Material>> =
-        Arc::new(Box::new(Lambertian::new_with((0.7, 0.3, 0.3).into())));
-    let material_left: Arc<Box<dyn Material>> =
-        Arc::new(Box::new(Metal::new_with((0.8, 0.8, 0.8).into(), 0.3)));
+    let material_center: Arc<Box<dyn Material>> = Arc::new(Box::new(Dielectric::new_with(1.5)));
+    let material_left: Arc<Box<dyn Material>> = Arc::new(Box::new(Dielectric::new_with(1.5)));
     let material_right: Arc<Box<dyn Material>> =
         Arc::new(Box::new(Metal::new_with((0.8, 0.6, 0.2).into(), 1.0)));
 

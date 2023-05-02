@@ -4,6 +4,7 @@ use crate::{hittable::HitRecord, ray::Ray};
 
 pub mod lambertian;
 pub mod metal;
+pub mod dielectric;
 
 pub trait Material: Send + Sync {
     fn scatter(
