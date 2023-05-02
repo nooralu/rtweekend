@@ -29,9 +29,9 @@ fn main() {
     let material_center: Arc<Box<dyn Material>> =
         Arc::new(Box::new(Lambertian::new_with((0.7, 0.3, 0.3).into())));
     let material_left: Arc<Box<dyn Material>> =
-        Arc::new(Box::new(Metal::new_with((0.8, 0.8, 0.8).into())));
+        Arc::new(Box::new(Metal::new_with((0.8, 0.8, 0.8).into(), 0.3)));
     let material_right: Arc<Box<dyn Material>> =
-        Arc::new(Box::new(Metal::new_with((0.8, 0.6, 0.2).into())));
+        Arc::new(Box::new(Metal::new_with((0.8, 0.6, 0.2).into(), 1.0)));
 
     world.add(Box::new(Sphere::new_with(
         (0.0, -100.5, -1.0).into(),
