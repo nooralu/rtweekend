@@ -47,7 +47,13 @@ fn main() {
     world.add(Box::new(Sphere::new_with(
         (-1.0, 0.0, -1.0).into(),
         0.5,
-        material_left,
+        material_left.clone(),
+    )));
+
+    world.add(Box::new(Sphere::new_with(
+        (-1.0, 0.0, -1.0).into(),
+        -0.4,
+        material_left.clone(),
     )));
 
     world.add(Box::new(Sphere::new_with(
