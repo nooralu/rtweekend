@@ -5,7 +5,7 @@ use rand::prelude::*;
 use raytracer::{
     camera::Camera,
     hittable::{hittable_list::HittableList, sphere::Sphere, Hittable},
-    material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal, Material},
+    material::{lambertian::Lambertian, Material},
     ray::Ray,
 };
 use std::{
@@ -23,47 +23,27 @@ fn main() {
     let max_depth = 50;
 
     // World
+    let r = (PI / 4.0).cos();
     let mut world: HittableList = Default::default();
-    let material_ground: Arc<Box<dyn Material>> =
-        Arc::new(Box::new(Lambertian::new_with((0.8, 0.8, 0.0).into())));
-    let material_center: Arc<Box<dyn Material>> =
-        Arc::new(Box::new(Lambertian::new_with((0.1, 0.2, 0.5).into())));
-    let material_left: Arc<Box<dyn Material>> = Arc::new(Box::new(Dielectric::new_with(1.5)));
+    let material_left: Arc<Box<dyn Material>> =
+        Arc::new(Box::new(Lambertian::new_with((0.0, 0.0, 1.0).into())));
     let material_right: Arc<Box<dyn Material>> =
-        Arc::new(Box::new(Metal::new_with((0.8, 0.6, 0.2).into(), 0.0)));
+        Arc::new(Box::new(Lambertian::new_with((1.0, 0.0, 0.0).into())));
 
     world.add(Box::new(Sphere::new_with(
-        (0.0, -100.5, -1.0).into(),
-        100.0,
-        material_ground,
+        (-r, 0.0, -1.0).into(),
+        r,
+        material_left,
     )));
 
     world.add(Box::new(Sphere::new_with(
-        (0.0, 0.0, -1.0).into(),
-        0.5,
-        material_center,
-    )));
-
-    world.add(Box::new(Sphere::new_with(
-        (-1.0, 0.0, -1.0).into(),
-        0.5,
-        material_left.clone(),
-    )));
-
-    world.add(Box::new(Sphere::new_with(
-        (-1.0, 0.0, -1.0).into(),
-        -0.4,
-        material_left.clone(),
-    )));
-
-    world.add(Box::new(Sphere::new_with(
-        (1.0, 0.0, -1.0).into(),
-        0.5,
+        (r, 0.0, -1.0).into(),
+        r,
         material_right,
     )));
 
     // Camera
-    let camera: Camera = Default::default();
+    let camera: Camera = Camera::new_with(90.0, aspect_ratio);
 
     // Render
 
@@ -83,10 +63,6 @@ fn main() {
         }
     }
     eprintln!("Done.");
-}
-
-fn degrees_to_radians(degrees: f64) -> f64 {
-    degrees * PI / 180.0
 }
 
 fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Color {
