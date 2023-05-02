@@ -8,7 +8,7 @@ use raytracer::{
     ray::Ray,
 };
 use std::f64::{consts::PI, INFINITY};
-use vec3::{random_unit_vector, unit_vector, Color};
+use vec3::{unit_vector, Color};
 
 fn main() {
     // Image
@@ -62,7 +62,13 @@ fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Color {
     if world.hit(r, 0.001, INFINITY, &mut rec) {
         // change distribution from cos^3(theta) to cos(theta)
         // let target = rec.p + rec.normal + vec3::random_in_unit_sphere();
-        let target = rec.p + rec.normal + random_unit_vector();
+        // let target = rec.p + rec.normal + vec3::random_unit_vector();
+
+        // A more intuitive approach is to have a uniform scatter direction
+        // for all angles away from the hit point, with no dependence on
+        // the angle from the normal. Many of the first raytracing papers
+        // used this diffuse method (before adopting Lambertian diffuse).
+        let target = rec.p + vec3::random_in_heimsphere(&rec.normal);
         return 0.5 * ray_color(&(rec.p, target - rec.p).into(), world, depth - 1);
     }
 
