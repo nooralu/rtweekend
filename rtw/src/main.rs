@@ -4,10 +4,14 @@ use color_util::write_color;
 use rand::prelude::*;
 use raytracer::{
     camera::Camera,
-    hittable::{hittable_list::HittableList, sphere::Sphere, HitRecord, Hittable},
+    hittable::{hittable_list::HittableList, sphere::Sphere, Hittable},
+    material::{lambertian::Lambertian, metal::Metal, Material},
     ray::Ray,
 };
-use std::f64::{consts::PI, INFINITY};
+use std::{
+    f64::{consts::PI, INFINITY},
+    sync::Arc,
+};
 use vec3::{unit_vector, Color};
 
 fn main() {
@@ -20,8 +24,38 @@ fn main() {
 
     // World
     let mut world: HittableList = Default::default();
-    world.add(Box::<Sphere>::new(((0.0, 0.0, -1.0), 0.5).into()));
-    world.add(Box::<Sphere>::new(((0.0, -100.5, -1.0), 100.0).into()));
+    let material_ground: Arc<Box<dyn Material>> =
+        Arc::new(Box::new(Lambertian::new_with((0.8, 0.8, 0.0).into())));
+    let material_center: Arc<Box<dyn Material>> =
+        Arc::new(Box::new(Lambertian::new_with((0.7, 0.3, 0.3).into())));
+    let material_left: Arc<Box<dyn Material>> =
+        Arc::new(Box::new(Metal::new_with((0.8, 0.8, 0.8).into())));
+    let material_right: Arc<Box<dyn Material>> =
+        Arc::new(Box::new(Metal::new_with((0.8, 0.6, 0.2).into())));
+
+    world.add(Box::new(Sphere::new_with(
+        (0.0, -100.5, -1.0).into(),
+        100.0,
+        material_ground,
+    )));
+
+    world.add(Box::new(Sphere::new_with(
+        (0.0, 0.0, -1.0).into(),
+        0.5,
+        material_center,
+    )));
+
+    world.add(Box::new(Sphere::new_with(
+        (-1.0, 0.0, -1.0).into(),
+        0.5,
+        material_left,
+    )));
+
+    world.add(Box::new(Sphere::new_with(
+        (1.0, 0.0, -1.0).into(),
+        0.5,
+        material_right,
+    )));
 
     // Camera
     let camera: Camera = Default::default();
@@ -51,25 +85,24 @@ fn degrees_to_radians(degrees: f64) -> f64 {
 }
 
 fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Color {
-    let mut rec: HitRecord = Default::default();
-
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if depth <= 0 {
         // black
         return (0.0, 0.0, 0.0).into();
     }
 
-    if world.hit(r, 0.001, INFINITY, &mut rec) {
-        // change distribution from cos^3(theta) to cos(theta)
-        // let target = rec.p + rec.normal + vec3::random_in_unit_sphere();
-        // let target = rec.p + rec.normal + vec3::random_unit_vector();
-
-        // A more intuitive approach is to have a uniform scatter direction
-        // for all angles away from the hit point, with no dependence on
-        // the angle from the normal. Many of the first raytracing papers
-        // used this diffuse method (before adopting Lambertian diffuse).
-        let target = rec.p + vec3::random_in_heimsphere(&rec.normal);
-        return 0.5 * ray_color(&(rec.p, target - rec.p).into(), world, depth - 1);
+    if let Some(rec) = world.hit(r, 0.001, INFINITY) {
+        let mut scattered: Ray = Default::default();
+        let mut attenuation: Color = Default::default();
+        if rec
+            .material
+            .scatter(r, &rec, &mut attenuation, &mut scattered)
+        {
+            return attenuation * ray_color(&scattered, world, depth - 1);
+        } else {
+            // black
+            return (0.0, 0.0, 0.0).into();
+        }
     }
 
     // normalized unit vector, so that -1.0 < y < 1.0

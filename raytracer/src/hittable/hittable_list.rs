@@ -6,21 +6,18 @@ pub struct HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
-        let mut temp_rec: HitRecord = Default::default();
-        let mut hit_anything = false;
+    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let mut hit_record = None;
         let mut closest_so_far = t_max;
 
-        for object in self.objects.iter() {
-            if object.hit(r, t_min, closest_so_far, &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-
-                *rec = temp_rec;
+        for object in &self.objects {
+            if let Some(temp_record) = object.hit(r, t_min, closest_so_far) {
+                closest_so_far = temp_record.t;
+                hit_record = Some(temp_record);
             }
         }
 
-        hit_anything
+        hit_record
     }
 }
 

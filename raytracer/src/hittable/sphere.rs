@@ -1,14 +1,19 @@
+use std::sync::Arc;
+
 use vec3::{dot, Vec3};
+
+use crate::material::Material;
 
 use super::{HitRecord, Hittable};
 
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
+    pub material: Arc<Box<dyn Material>>,
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin() - self.center;
         let a = r.direction().length_squared();
         let half_b = dot(&oc, &r.direction());
@@ -16,7 +21,7 @@ impl Hittable for Sphere {
 
         let discriminant = half_b * half_b - a * c;
         if discriminant < 0.0 {
-            return false;
+            return None;
         }
         let sqrtd = discriminant.sqrt();
 
@@ -25,40 +30,36 @@ impl Hittable for Sphere {
         if root < t_min || t_max < root {
             root = (-half_b + sqrtd) / a;
             if root < t_min || t_max < root {
-                return false;
+                return None;
             }
         }
 
-        rec.t = root;
-        rec.p = r.at(rec.t);
-        let out_normal = (rec.p - self.center) / self.radius;
+        let out_normal = (r.at(root) - self.center) / self.radius;
+        let mut rec: HitRecord = HitRecord {
+            t: root,
+            p: r.at(root),
+            normal: Default::default(),
+            front_face: false,
+            material: self.material.clone(),
+        };
         rec.set_face_normal(r, out_normal);
 
-        true
+        Some(rec)
     }
 }
 
 impl Sphere {
-    pub fn new() -> Self {
+    pub fn new_with(center: Vec3, radius: f64, material: Arc<Box<dyn Material>>) -> Self {
         Self {
-            center: Default::default(),
-            radius: 0.0,
+            center,
+            radius,
+            material: material.clone(),
         }
     }
-
-    pub fn new_with(center: Vec3, radius: f64) -> Self {
-        Self { center, radius }
-    }
 }
 
-impl Default for Sphere {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl From<((f64, f64, f64), f64)> for Sphere {
-    fn from(((x, y, z), radius): ((f64, f64, f64), f64)) -> Self {
-        Self::new_with((x, y, z).into(), radius)
+impl From<((f64, f64, f64), f64, Arc<Box<dyn Material>>)> for Sphere {
+    fn from((center, radius, material): ((f64, f64, f64), f64, Arc<Box<dyn Material>>)) -> Self {
+        Self::new_with(center.into(), radius, material)
     }
 }
