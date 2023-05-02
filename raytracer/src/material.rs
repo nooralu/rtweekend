@@ -2,9 +2,9 @@ use vec3::Color;
 
 use crate::{hittable::HitRecord, ray::Ray};
 
+pub mod dielectric;
 pub mod lambertian;
 pub mod metal;
-pub mod dielectric;
 
 pub trait Material: Send + Sync {
     fn scatter(

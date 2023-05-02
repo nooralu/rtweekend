@@ -25,13 +25,13 @@ impl Material for Dielectric {
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let cannot_refract = refraction_ratio * sin_theta > 1.0;
-        let direction;
 
-        if cannot_refract || Self::reflectance(cos_theta, refraction_ratio) > rand::random() {
-            direction = vec3::reflect(&unit_direction, &rec.normal);
-        } else {
-            direction = refract(&unit_direction, &rec.normal, refraction_ratio);
-        }
+        let direction =
+            if cannot_refract || Self::reflectance(cos_theta, refraction_ratio) > rand::random() {
+                vec3::reflect(&unit_direction, &rec.normal)
+            } else {
+                refract(&unit_direction, &rec.normal, refraction_ratio)
+            };
 
         *scattered = (rec.p, direction).into();
         true
