@@ -1,14 +1,23 @@
 mod color_util;
 
 use color_util::write_color;
-use raytracer::ray::Ray;
-use vec3::{dot, unit_vector, Color, Point3, Vec3};
+use raytracer::{
+    hittable::{hittable_list::HittableList, sphere::Sphere, HitRecord, Hittable},
+    ray::Ray,
+};
+use std::f64::{consts::PI, INFINITY};
+use vec3::{unit_vector, Color, Point3, Vec3};
 
 fn main() {
     // Image
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as u32;
+
+    // World
+    let mut world: HittableList = Default::default();
+    world.add(Box::<Sphere>::new(((0.0, 0.0, -1.0), 0.5).into()));
+    world.add(Box::<Sphere>::new(((0.0, -100.5, -1.0), 100.0).into()));
 
     // Camera
     let viewport_height = 2.0;
@@ -34,36 +43,21 @@ fn main() {
                 origin,
                 lower_left_corner + u * herizontal + v * vertical - origin,
             );
-            let pixel_color = ray_color(&r.into());
+            let pixel_color = ray_color(&r.into(), &world);
             write_color(&pixel_color);
         }
     }
     eprintln!("Done.");
 }
 
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
-    let oc = r.origin() - *center;
-    let a = r.direction().length_squared();
-    let half_b = dot(&oc, &r.direction());
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = half_b * half_b - a * c;
-    if discriminant < 0.0 {
-        -1.0
-    } else {
-        (-half_b - discriminant.sqrt()) / a
-    }
+fn degrees_to_radians(degrees: f64) -> f64 {
+    degrees * PI / 180.0
 }
 
-fn ray_color(r: &Ray) -> Color {
-    let center: Point3 = (0.0, 0.0, -1.0).into();
-    let t = hit_sphere(&center, 0.5, r);
-    if t > 0.0 {
-        // normal vector
-        let n = unit_vector(&(r.at(t) - center));
-        // map normal vector to color
-        // n + (1.0, 1.0, 1.0) is to map the range -1.0 < n < 1.0 to 0.0 < n < 2.0
-        // 0.5 * (n + (1.0, 1.0, 1.0)) is to map the range 0.0 < n < 2.0 to 0.0 < n < 1.0
-        return 0.5 * (n + (1.0, 1.0, 1.0).into());
+fn ray_color(r: &Ray, world: &impl Hittable) -> Color {
+    let mut rec: HitRecord = Default::default();
+    if world.hit(r, 0.0, INFINITY, &mut rec) {
+        return 0.5 * (rec.normal + (1.0, 1.0, 1.0).into());
     }
 
     // normalized unit vector, so that -1.0 < y < 1.0
