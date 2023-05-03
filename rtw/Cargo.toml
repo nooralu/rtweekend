@@ -8,3 +8,7 @@ vec3 = { path = "../vec3" }
 raytracer = { path = "../raytracer" }
 rand = "0.8.5"
 rayon = "1.7.0"
+
+[profile.release]
+opt-level = 3
+lto = true
