@@ -11,18 +11,21 @@ pub struct PPMGenerator {
     max_depth: u32,
     sender: Sender<Pixel>,
     receiver: Receiver<Pixel>,
+    image: Vec<Vec<Color>>,
 }
 
 impl PPMGenerator {
     pub fn new_with(width: u32, aspect_ratio: f64, samples_per_pixel: u32, max_depth: u32) -> Self {
         let (sender, receiver) = channel();
+        let height: u32 = (width as f64 / aspect_ratio) as u32;
         Self {
             width,
-            height: (width as f64 / aspect_ratio) as u32,
+            height,
             samples_per_pixel,
             max_depth,
             sender,
             receiver,
+            image: vec![vec![Default::default(); width as usize]; height as usize],
         }
     }
 
@@ -50,11 +53,19 @@ impl PPMGenerator {
         let ppm_header = format!("P3\n{} {}\n255\n", self.width, self.height);
         let mut ppm_body = String::new();
 
-        for j in (0..self.height).rev() {
+        let height = self.height as usize;
+        let width = self.width as usize;
+
+        for j in (0..height).rev() {
             eprintln!("\rScanlines remaining: {j}");
-            for _ in 0..self.width {
+            for _ in 0..width {
                 let pixel = self.receiver.recv().unwrap();
-                ppm_body += &format_color(&pixel.1, self.samples_per_pixel);
+                self.image[pixel.0 .1 as usize][pixel.0 .0 as usize] = pixel.1;
+            }
+        }
+        for j in (0..height).rev() {
+            for i in 0..width {
+                ppm_body += &format_color(&self.image[j][i], self.samples_per_pixel);
             }
         }
         print!("{}{}", ppm_header, ppm_body);
