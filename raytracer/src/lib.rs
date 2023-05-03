@@ -7,6 +7,7 @@ use vec3::Point3;
 pub mod camera;
 pub mod hittable;
 pub mod material;
+pub mod ppm;
 pub mod ray;
 
 pub fn random_scene() -> HittableList {

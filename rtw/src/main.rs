@@ -1,18 +1,11 @@
-mod color_util;
-
-use color_util::write_color;
 use rand::prelude::*;
-use raytracer::{camera::Camera, hittable::Hittable, random_scene, ray::Ray};
-use std::f64::INFINITY;
+use rayon::prelude::*;
+use raytracer::{camera::Camera, hittable::Hittable, ppm::PPMGenerator, random_scene, ray::Ray};
+use std::{f64::INFINITY, thread::spawn};
 use vec3::{unit_vector, Color, Point3};
 
 fn main() {
-    // Image
     let aspect_ratio = 3.0 / 2.0;
-    let image_width = 1200;
-    let image_height = (image_width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 500;
-    let max_depth = 50;
 
     // World
     let world = random_scene();
@@ -35,31 +28,41 @@ fn main() {
     );
 
     // Render
-    let ppm_header = format!("P3\n{} {}\n255\n", image_width, image_height);
-    let mut ppm_body = String::new();
+    let mut ppm_generator = PPMGenerator::new_with(1200, aspect_ratio, 500, 50);
+    let height = ppm_generator.height();
+    let width = ppm_generator.width();
+    let max_depth = ppm_generator.max_depth();
+    let samples_per_pixel = ppm_generator.samples_per_pixel();
+    let sender = ppm_generator.sender();
 
-    // print!("P3\n{image_width} {image_height}\n255\n");
+    let handler = spawn(move || {
+        ppm_generator.save();
+    });
 
-    for j in (0..image_height).rev() {
-        eprintln!("\rScanlines remaining: {j}");
-        for i in 0..image_width {
-            let mut pixel_color: Color = Default::default();
-            for _ in 0..samples_per_pixel {
-                let u = (i as f64 + random::<f64>()) / (image_width - 1) as f64;
-                let v = (j as f64 + random::<f64>()) / (image_height - 1) as f64;
-                let r = camera.get_ray(u, v);
-                pixel_color += ray_color(&r, &world, max_depth);
-            }
-            ppm_body += &write_color(&pixel_color, samples_per_pixel);
-        }
-    }
-    print!("{}{}", ppm_header, ppm_body);
-    eprintln!("Done.");
+    // Parallelize the rendering
+    (0..height)
+        .rev()
+        .par_bridge()
+        .for_each_with(sender, |sender, j| {
+            let sender = sender.clone();
+            (0..width).par_bridge().for_each_with(sender, |sender, i| {
+                let mut pixel_color: Color = Default::default();
+                for _ in 0..samples_per_pixel {
+                    let u = (i as f64 + random::<f64>()) / (width - 1) as f64;
+                    let v = (j as f64 + random::<f64>()) / (height - 1) as f64;
+                    let r = camera.get_ray(u, v);
+                    pixel_color += ray_color(&r, &world, max_depth);
+                }
+                sender.send(((i, j), pixel_color)).unwrap();
+            });
+        });
+
+    handler.join().unwrap();
 }
 
-fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Color {
+fn ray_color(r: &Ray, world: &impl Hittable, depth: u32) -> Color {
     // If we've exceeded the ray bounce limit, no more light is gathered.
-    if depth <= 0 {
+    if depth == 0 {
         // black
         return (0.0, 0.0, 0.0).into();
     }

@@ -7,3 +7,4 @@ edition = "2021"
 vec3 = { path = "../vec3" }
 raytracer = { path = "../raytracer" }
 rand = "0.8.5"
+rayon = "1.7.0"
